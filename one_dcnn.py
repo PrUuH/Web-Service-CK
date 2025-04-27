@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 import scipy.signal as ssignal
 from scipy.fft import fft, fftfreq
 
-# Определение модели 1D CNN
+
 class Simple1DCNN(nn.Module):
     def __init__(self, input_dim, num_classes):
         super(Simple1DCNN, self).__init__()
@@ -22,18 +22,17 @@ class Simple1DCNN(nn.Module):
         self.fc2 = nn.Linear(128, num_classes)
     
     def forward(self, x):
-        x = x.unsqueeze(1)  # Добавляем канал
+        x = x.unsqueeze(1)
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.relu(x)
         x = self.pool(x)
-        x = x.view(x.size(0), -1)  # Flatten
+        x = x.view(x.size(0), -1) 
         x = self.fc1(x)
         x = self.relu(x)
         x = self.fc2(x)
         return x
 
-# Функция для извлечения признаков
 def extract_features(signal, fs):
     try:
         wd, m = hp.process(signal, fs)
@@ -41,16 +40,13 @@ def extract_features(signal, fs):
         print("BadSignalWarning:", e)
         return None
     
-    # Вычисление дополнительных частотных характеристик
     n = len(signal)
     yf = fft(signal)
     xf = fftfreq(n, 1/fs)
     
-    # Определение границ для LF и HF
     lf_band = (0.04, 0.15)
     hf_band = (0.15, 0.4)
     
-    # Вычисление LF и HF
     lf_mask = (xf >= lf_band[0]) & (xf <= lf_band[1])
     hf_mask = (xf >= hf_band[0]) & (xf <= hf_band[1])
     
@@ -58,7 +54,6 @@ def extract_features(signal, fs):
     hf = np.trapz(np.abs(yf[hf_mask])**2, xf[hf_mask])
     lf_hf_ratio = lf / hf if hf != 0 else 0
     
-    # Сбор всех признаков
     features = {
         'bpm': m['bpm'],
         'ibi': m['ibi'],
@@ -80,26 +75,19 @@ def extract_features(signal, fs):
     
     return features
 
-# Главная функция
-# Главная функция
 def main(hea_file_path):
-    # Загрузка записи
-    record = wfdb.rdrecord(hea_file_path[:-4])  # Удаляем расширение .hea
+    record = wfdb.rdrecord(hea_file_path[:-4])  
     
-    # Получение сигнала и частоты дискретизации
     signal = record.p_signal.astype(np.float32).flatten()
     fs = record.fs
     
-    # Обрезаем сигнал до 5 минут
     five_minute_samples = 60 * 5 * fs
     signal = signal[:five_minute_samples]
     
-    # Извлечение признаков
     features = extract_features(signal, fs)
     if features is None:
         return "Не удалось извлечь признаки."
     
-    # Преобразование признаков в массив numpy
     feature_names = [
         'bpm', 'ibi', 'sdnn', 'sdsd', 'rmssd', 'pnn20', 'pnn50', 'hr_mad',
         'sd1', 'sd2', 's', 'sd1/sd2', 'breathingrate', 'lf', 'hf', 'lf_hf_ratio'
@@ -107,28 +95,22 @@ def main(hea_file_path):
     feature_values = [features[name] for name in feature_names]
     X = np.array(feature_values).reshape(1, -1)
     
-    # Нормализация данных
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
-    # Преобразование данных в тензор
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
     
-    # Инициализация модели
     input_dim = X_scaled.shape[1]
     num_classes = 15 
     model = Simple1DCNN(input_dim, num_classes)
     
-    # Загрузка предобученных весов
     model.load_state_dict(torch.load('simple_1dcnn_model.pth', map_location=torch.device('cpu')))
     model.eval()
     
-    # Предсказание
     with torch.no_grad():
         output = model(X_tensor)
         _, predicted = torch.max(output.data, 1)
     
-    # Вывод результата
     age_group = predicted.item() + 1
     return f"Предсказанная возрастная группа: {age_group}"
 
