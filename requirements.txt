@@ -6,8 +6,6 @@ numpy
 scipy
 pandas
 matplotlib
-sys
 scikit-learn
-PIL
 pathlib 
 shutil
