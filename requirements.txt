@@ -6,3 +6,9 @@ numpy
 scipy
 pandas
 matplotlib
+os
+sys
+sklearn
+PIL
+pathlib 
+shutil
