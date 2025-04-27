@@ -1,0 +1,4 @@
+rrest-syn003 2 500 105000
+rrest-syn003.dat 16 54859.4884(-27446)/au 0 0 0 -1036 0 Pleth, simulated finger PPG
+rrest-syn003.dat 16 54.6668(-27340)/mV 0 0 0 30956 0 II, simulated ECG
+#<age>:  <sex>:  <diagnoses>: (none)  <medications>: (none)  <ventilation>: simulated  <subject group>: bw  <heart rate>: 80 beats/min  <respiratory rate>: 8 breaths/min
