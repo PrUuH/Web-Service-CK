@@ -7,7 +7,7 @@ scipy
 pandas
 matplotlib
 sys
-sklearn
+scikit-learn
 PIL
 pathlib 
 shutil
